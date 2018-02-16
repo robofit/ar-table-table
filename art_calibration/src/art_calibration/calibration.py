@@ -7,7 +7,7 @@ from geometry_msgs.msg import Transform
 from art_calibration import ArtRobotCalibration, ArtCellCalibration
 from std_msgs.msg import Bool
 from art_msgs.srv import RecalibrateCell, RecalibrateCellRequest, RecalibrateCellResponse
-from pcl.registration import icp, icp_nl, gicp
+#from pcl.registration import icp, icp_nl, gicp
 import tf
 from std_msgs.msg import Header
 
@@ -15,7 +15,7 @@ from std_msgs.msg import Header
 from dynamic_reconfigure.server import Server
 from art_calibration.cfg import CalibrationConfig
 
-from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
+#from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 import sensor_msgs.point_cloud2 as pc2
 
 
@@ -102,7 +102,7 @@ class ArtCalibration(object):
             cell.z_rotate_offset = config.get(cell.cell_id + "_z_rotate_offset", 0)
         return config
 
-    def calculate_icp(self):
+    '''def calculate_icp(self):
         print "calculate"
         main_cell = self.cells[0]  # type: ArtRobotCalibration
         for c in self.cells:  # type: ArtRobotCalibration
@@ -142,4 +142,4 @@ class ArtCalibration(object):
             pcloud = pc2.create_cloud_xyz32(h, c.last_pc_transformed.to_list())
             transformed_cloud = c.transform_pcloud(c.last_pc, translation2, rotation2,
                                                    c.world_frame, c.world_frame)
-            c.pc_pub.publish(transformed_cloud)
+            c.pc_pub.publish(transformed_cloud)'''

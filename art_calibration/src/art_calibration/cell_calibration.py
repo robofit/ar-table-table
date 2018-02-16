@@ -10,10 +10,10 @@ from std_msgs.msg import Bool
 import ast
 from sensor_msgs.msg import PointCloud2
 import sensor_msgs.point_cloud2 as pc2
-import pcl
+#import pcl
 import numpy as np
 from sensor_msgs.msg import PointField
-from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
+#from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
 from geometry_msgs.msg import Transform, TransformStamped, Vector3, Quaternion
 import tf
 from std_msgs.msg import Header
@@ -50,8 +50,8 @@ class ArtCellCalibration(object):
                                                                  Bool,
                                                                  queue_size=1,
                                                                  latch=True)
-        self.pc_sub = rospy.Subscriber(pc_topic, PointCloud2, self.pc_cb, queue_size=1)
-        self.pc_pub = rospy.Publisher("/test_" + str(cell_id), PointCloud2, queue_size=1)
+        #self.pc_sub = rospy.Subscriber(pc_topic, PointCloud2, self.pc_cb, queue_size=1)
+        #self.pc_pub = rospy.Publisher("/test_" + str(cell_id), PointCloud2, queue_size=1)
 
         self.x_offset = 0
         self.y_offset = 0
@@ -161,13 +161,8 @@ class ArtCellCalibration(object):
             self.stop_marker_detection()
             self.calibrate()
 
-    def pc_cb(self, pc):
-        '''
-
-        :param pc:
-        :type pc: PointCloud2
-        :return:
-        '''
+    '''def pc_cb(self, pc):
+        
         if not self.calibrated:
             rospy.logwarn_throttle(1.0, "Not calibrated cell: " + self.cell_id)
             return
@@ -215,9 +210,9 @@ class ArtCellCalibration(object):
         pcloud = pc2.create_cloud_xyz32(h, p.to_list())
         pcloud.header.frame_id = self.world_frame
 
-        self.last_pc_transformed = p
+        self.last_pc_transformed = p'''
 
-    @staticmethod
+    '''@staticmethod
     def transform_pcloud(cloud_in, translation, rotation, source_frame_id, target_frame_id):
         transform = TransformStamped()
 
@@ -225,4 +220,4 @@ class ArtCellCalibration(object):
         transform.transform.rotation = Quaternion(rotation[0], rotation[1], rotation[2], rotation[3])
         transform.header.frame_id = source_frame_id
         transform.child_frame_id = target_frame_id
-        return do_transform_cloud(cloud_in, transform)
+        return do_transform_cloud(cloud_in, transform)'''
