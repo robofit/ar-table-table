@@ -49,7 +49,7 @@ class ArtBrainUtils(object):
         if obj_type is None or len(obj_type) == 0:
             rospy.logerr("what the fuck?")
             return []
-        #obj_type = obj_type[0]
+        # obj_type = obj_type[0]
         # TODO check frame_id and transform to table frame?
         for point in polygon.polygon.points:
             pick_polygon.append([point.x, point.y])
@@ -175,4 +175,3 @@ class ArtBrainErrors(IntEnum):
     ERROR_DRILL_FAILED = InterfaceState.ERROR_DRILL_FAILED
     ERROR_GRIPPER_MOVE_FAILED = InterfaceState.ERROR_GRIPPER_MOVE_FAILED
     ERROR_GRIPPER_NOT_HOLDING_SELECTED_OBJECT = InterfaceState.ERROR_GRIPPER_NOT_HOLDING_SELECTED_OBJECT
-

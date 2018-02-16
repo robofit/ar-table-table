@@ -10,7 +10,7 @@ translate = QtCore.QCoreApplication.translate
 
 class ProgramListItem(Item):
 
-    def __init__(self, scene, x, y, program_headers, learned_dict, selected_program_id=None, program_selected_cb=None):
+    def __init__(self, scene, x, y, program_headers, learned_dict, selected_program_id=None, program_selected_cb=None, program_selection_changed_cb=None):
 
         self.w = 100
         self.h = 100
@@ -18,6 +18,7 @@ class ProgramListItem(Item):
         self.program_headers = program_headers
         self.learned_dict = learned_dict
         self.program_selected_cb = program_selected_cb
+        self.program_selection_changed_cb = program_selection_changed_cb
 
         super(ProgramListItem, self).__init__(scene, x, y)
 
@@ -35,7 +36,7 @@ class ProgramListItem(Item):
 
         for ph in self.program_headers:
 
-            data.append("ID: " + str(ph.id) + "\nName: " + ph.name)
+            data.append("Program " + str(ph.id) + "\n" + ph.name)
             idx = len(data) - 1
             self.map_from_idx_to_program_id[idx] = ph.id
             self.map_from_program_id_to_idx[ph.id] = idx
@@ -85,6 +86,9 @@ class ProgramListItem(Item):
             self.edit_btn.set_enabled(False)
             self.template_btn.set_enabled(False)
 
+            if self.program_selection_changed_cb:
+                self.program_selection_changed_cb(None)
+
         else:
 
             pid = self.map_from_idx_to_program_id[self.list.selected_item_idx]
@@ -98,6 +102,9 @@ class ProgramListItem(Item):
                     break
 
             self.template_btn.set_enabled(True)
+
+            if self.program_selection_changed_cb:
+                self.program_selection_changed_cb(ph.id, ro=ph.readonly, learned=self.learned_dict[ph.id])
 
     def get_current_header(self):
 

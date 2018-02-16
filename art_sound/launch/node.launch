@@ -1,3 +1,4 @@
 <launch>
-    <node pkg="art_sound" type="node" output="screen" name="art_sound_node" ns="/art/interface/sound"/>
+    <arg name="machine"/>
+    <node pkg="art_sound" type="node" output="screen" name="art_sound_node" machine="$(arg machine)"  ns="/art/interface/sound"/>
 </launch>

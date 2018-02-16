@@ -140,7 +140,7 @@ class ArtBrainRobotInterface:
         else:
             return ArtBrainErrorSeverities.WARNING, ArtBrainErrors.ERROR_PICK_FAILED, arm_id
 
-    def place_object_to_pose(self, place_pose, arm_id, objects_frame_id="/marker", pick_only_y_axis=False):
+    def place_object_to_pose(self, place_pose, arm_id, objects_frame_id="marker", pick_only_y_axis=False):
         if arm_id is None:
             return ArtBrainErrorSeverities.ERROR, ArtBrainErrors.ERROR_GRIPPER_NOT_DEFINED, None
         if place_pose is None:
@@ -194,11 +194,11 @@ class ArtBrainRobotInterface:
         arm = self.get_arm_by_id(arm_id)
 
         if not arm.touch_poses(obj.object_id, pose, drill_duration):
-            return ArtBrainErrorSeverities.WARNING, ArtBrainErrors.ERROR_GRIPPER_MOVE_FAILED, arm_id
+            return ArtBrainErrorSeverities.WARNING, ArtBrainErrors.ERROR_DRILL_FAILED, arm_id
         else:
             return None, None, arm_id
 
-    def move_arm_to_pose(self, pose, arm_id=None, picking=False):
+    def move_arm_to_pose(self, pose, arm_id=None, picking=False, drilling=False):
         if arm_id is None:
             return ArtBrainErrorSeverities.ERROR, ArtBrainErrors.ERROR_GRIPPER_NOT_DEFINED, None
         arm = self.get_arm_by_id(arm_id)
@@ -206,13 +206,16 @@ class ArtBrainRobotInterface:
         if not arm.move_to_pose(pose):
             if picking:
                 return ArtBrainErrorSeverities.WARNING, ArtBrainErrors.ERROR_PICK_FAILED, arm_id
+            elif drilling:
+                return ArtBrainErrorSeverities.WARNING, ArtBrainErrors.ERROR_DRILL_FAILED, arm_id
             else:
                 return ArtBrainErrorSeverities.WARNING, ArtBrainErrors.ERROR_GRIPPER_MOVE_FAILED, arm_id
         else:
             return None, None, arm_id
 
-    def arms_get_ready(self, arm_ids=None):
-        if arm_ids is None:
+    def arms_get_ready(self, arm_ids=[]):
+        assert isinstance(arm_ids, list)
+        if not arm_ids:
             for arm in self._arms:
                 severity, error = arm.get_ready()
                 if error is not None:
@@ -222,7 +225,7 @@ class ArtBrainRobotInterface:
                 arm = self.get_arm_by_id(arm_id)
                 if arm is None:
                     continue
-                return arm.get_ready()
+                arm.get_ready()
         return None, None, None
 
     def arm_prepare_for_interaction(self, arm_id=None):
@@ -236,7 +239,7 @@ class ArtBrainRobotInterface:
 
         else:
             arm = self.get_arm_by_id(arm_id)  # type: ArtGripper
-            #severity, error = arm.move_to_user()
+            # severity, error = arm.move_to_user()
             # if error is not None:
             #    return severity, error, arm_id
             severity, error = arm.interaction_on()
@@ -338,13 +341,13 @@ class ArtBrainRobotInterface:
         else:
             return None
 
-    def init_arms(self, arms=None):
+    def init_arms(self, arms=None, reset_holding_object=True):
         if arms is None:
             for arm in self._arms:
-                arm.re_init()
+                arm.re_init(reset_holding_object=reset_holding_object)
         else:
             for arm in arms:
-                arm.re_init()
+                arm.re_init(reset_holding_object=reset_holding_object)
 
     def set_halted(self, halted):
         self.halted = halted

@@ -72,14 +72,21 @@ class ArtArmNavigationActionServer(object):
                 world_frame = rospy.get_param("/art/conf/world_frame", "marker")
                 p.header.stamp = rospy.Time(0)
                 p_marker = self.tf_listener.transformPose(world_frame, p)
-                while not self.touch_point(p_marker, goal.drill_duration):
+                """while not self.touch_point(p_marker, goal.drill_duration):
 
                     rospy.loginfo("Attempt " + str(attempt) + " out of " + str(max_attempt) + ".")
                     attempt += 1
                     if attempt > max_attempt:
                         self.result.result = self.result.FAILURE
                         self._as.set_aborted(self.result)
-                        return
+                        return"""
+                if self.touch_point(p_marker, goal.drill_duration):
+                    self.result.result = self.result.SUCCESS
+                    self._as.set_succeeded(result=self.result)
+                else:
+                    self.result.result = self.result.FAILURE
+                    self.result.message = "Failed to drill"
+                    self._as.set_aborted(result=self.result)
 
         elif goal.operation == ArmNavigationGoal.MOVE_THROUGH_TRAJECTORY:
             self.result.result = ArmNavigationResult.BAD_REQUEST
@@ -103,32 +110,47 @@ class ArtArmNavigationActionServer(object):
             return False
         return True
 
-    def touch_point(self, pose, drill_duration):
+    def touch_point(self, pose, drill_duration, max_attempts=3):
         rospy.loginfo("Touch point in")
         pre_touch_pose = copy.deepcopy(pose)
 
         # TODO this works only for world frame_id (marker) -> in general, this pre_touch translation should be done with respect to x-axis of the gripper!
-        pre_touch_pose.pose.position.z += 0.02  # 2cm above desired pose
+        pre_touch_pose.pose.position.z += 0.05  # 5cm above desired pose
         self.group.set_pose_target(pre_touch_pose)
-        rospy.loginfo("Touch point go1")
+        rospy.logdebug("Pre touch pose")
         self.move_to_pose_pub.publish(pre_touch_pose)
-        if not self.group.go(wait=True):
-            rospy.logerr("go1 failed")
-            return False
+        attempt = 0
+        while not self.group.go(wait=True):
+            if attempt > max_attempts:
+                rospy.logerr("Failed to reach pre touch pose, giving up")
+                return False
+            else:
+                attempt += 1
+            rospy.logerr("Pre touch pose failed, try again")
         self.group.set_pose_target(pose)
-        rospy.loginfo("Touch point go2")
+        rospy.logdebug("Touching point")
         self.move_to_pose_pub.publish(pose)
-        if not self.group.go(wait=True):
-            rospy.logerr("go2 failed")
-            return False
+        attempt = 0
+        while not self.group.go(wait=True):
+            if attempt > max_attempts:
+                rospy.logerr("Failed to reach touch pose, giving up")
+                return False
+            else:
+                attempt += 1
+            rospy.logerr("Touch pose failed, try again")
         self.rotate_gripper(drill_duration)
         self.group.set_pose_target(pre_touch_pose)
-        rospy.loginfo("Touch point go3")
+        rospy.loginfo("Post touch pose")
         self.move_to_pose_pub.publish(pre_touch_pose)
-        if not self.group.go(wait=True):
-            rospy.logerr("go3 failed")
-            return False
-        rospy.loginfo("Touch point out")
+        attempt = 0
+        while not self.group.go(wait=True):
+            if attempt > max_attempts:
+                rospy.logerr("Failed to reach post touch pose, giving up")
+                return False
+            else:
+                attempt += 1
+            rospy.logerr("Post touch pose failed, try again")
+        rospy.logdebug("Touch done")
         return True
 
     def rotate_gripper(self, duration):

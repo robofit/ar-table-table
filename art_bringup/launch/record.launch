@@ -2,40 +2,61 @@
 <launch>
 
     <arg name="fps" default="5"/>
-    <arg name="pr2_kinect" default="true"/>
+    <arg name="fps_side_kinects" default="1"/>
+    <arg name="pr2_camera" default="true"/>
     <arg name="n1_kinect" default="true"/>
     <arg name="n2_kinect" default="true"/>
+    <arg name="surv_kinect" default="false"/>
+    <arg name="usb_cam" default="true"/>
     <arg name="quality" default="qhd"/>
     <arg name="topics" default=""/>
 
-    <group if="$(arg pr2_kinect)">
-        <node pkg="image_transport" name="republish1" type="republish" args="raw in:=/pr2_kinect/image_throttled theora out:=/pr2_kinect/image" >
+    <group if="$(arg pr2_camera)">
+        <node pkg="image_transport" name="republish1" type="republish" args="raw in:=/pr2_camera/image_throttled compressed out:=/pr2_camera/image" >
 
         </node>
-        <node pkg="topic_tools" name="throttle1" type="throttle" args="messages /kinect_head/rgb/image_color $(arg fps) /pr2_kinect/image_throttled" >
+        <node pkg="topic_tools" name="throttle1" type="throttle" args="messages /prosilica/image_raw $(arg fps) /pr2_camera/image_throttled" >
 
         </node>
     </group>
     <group if="$(arg n1_kinect)">
-         <node pkg="image_transport" name="republish2" type="republish" args="raw in:=/n1_kinect/image_throttled out:=/n1_kinect/image" >
+         <node pkg="image_transport" name="republish2" type="republish" args="raw in:=/n1_kinect/image_throttled compressed out:=/n1_kinect/image" >
 
         </node>
-        <node pkg="topic_tools" name="throttle2" type="throttle" args="messages /art/n1/kinect2/$(arg quality)/image_color_rect $(arg fps) /n1_kinect/image_throttled" >
+        <node pkg="topic_tools" name="throttle2" type="throttle" args="messages /art/n1/kinect2/$(arg quality)/image_color_rect $(arg fps_side_kinects) /n1_kinect/image_throttled" >
 
         </node>
     </group>
 
     <group if="$(arg n2_kinect)">
-         <node pkg="image_transport" name="republish3" type="republish" args="raw in:=/n2_kinect/image_throttled theora out:=/n2_kinect/image" >
+         <node pkg="image_transport" name="republish3" type="republish" args="raw in:=/n2_kinect/image_throttled compressed out:=/n2_kinect/image" >
 
         </node>
-        <node pkg="topic_tools" name="throttle3" type="throttle" args="messages /art/n2/kinect2/$(arg quality)/image_color_rect $(arg fps) /n2_kinect/image_throttled" >
+        <node pkg="topic_tools" name="throttle3" type="throttle" args="messages /art/n2/kinect2/$(arg quality)/image_color_rect $(arg fps_side_kinects) /n2_kinect/image_throttled" >
+
+        </node>
+    </group>
+
+    <group if="$(arg surv_kinect)">
+         <node pkg="image_transport" name="republish4" type="republish" args="raw in:=/surv_kinect/image_throttled compressed out:=/surv_kinect/image" >
+
+        </node>
+        <node pkg="topic_tools" name="throttle4" type="throttle" args="messages /kinect2/$(arg quality)/image_color_rect $(arg fps) /surv_kinect/image_throttled" >
+
+        </node>
+    </group>
+
+    <group if="$(arg usb_cam)">
+         <node pkg="image_transport" name="republish5" type="republish" args="raw in:=/usb_cam/image_throttled compressed out:=/usb_cam/image" >
+
+        </node>
+        <node pkg="topic_tools" name="throttle5" type="throttle" args="messages /usb_cam/image_raw $(arg fps) /usb_cam/image_throttled" >
 
         </node>
     </group>
 
     <node pkg="rosbag" type="record" name="rosbag_record_cam"
-       args="-o /home/dev/bag/ /pr2_kinect/image/theora /n1_kinect/image/theora /n2_kinect/image/theora /art/interface/state $(arg topics)" output="screen"/>
+       args="-o /home/dev/bag/ /audio /tf /pr2_camera/image/compressed /n1_kinect/image/compressed /n2_kinect/image/compressed /usb_cam/image/compressed /art/interface/state /surv_kinect/image/compressed $(arg topics)" output="screen"/>
 
 
 </launch>

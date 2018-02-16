@@ -28,13 +28,13 @@ def main(args):
     # -------------------------------------------------------------------------------------------
 
     prog = Program()
-    prog.header.id = 0
-    prog.header.name = "Trenink 1"
+    prog.header.id = 1
+    prog.header.name = "Trenink - oblast"
 
     pb = ProgramBlock()
-    pb.id = 2
+    pb.id = 1
     pb.name = "Zvedni ze stolu a poloz"
-    pb.on_success = 2
+    pb.on_success = 1
     pb.on_failure = 0
     prog.blocks.append(pb)
 
@@ -51,20 +51,22 @@ def main(args):
     # -------------------------------------------------------------------------------------------
 
     prog = Program()
-    prog.header.id = 1
-    prog.header.name = "Trenink 2"
+    prog.header.id = 2
+    prog.header.name = "Trenink - podavac"
 
     pb = ProgramBlock()
-    pb.id = 2
+    pb.id = 1
     pb.name = "Zvedni z podavace a poloz"
-    pb.on_success = 2
+    pb.on_success = 1
     pb.on_failure = 0
     prog.blocks.append(pb)
 
     pb.items.append(feeder_item(1))
     pb.items.append(place_item(2, ref_id=[1], on_success=3, on_failure=0))
-    pb.items.append(item(3, ProgramItem.GET_READY, on_success=4, on_failure=0))
-    pb.items.append(wait_item(4, ref_id=[2], on_success=1, on_failure=0))
+    pb.items.append(feeder_item(3, ref_id=[1]))
+    pb.items.append(place_item(4, ref_id=[3], on_success=5, on_failure=0))
+    pb.items.append(item(5, ProgramItem.GET_READY, on_success=6, on_failure=0))
+    pb.items.append(wait_item(6, ref_id=[4], on_success=1, on_failure=0))
 
     art.store_program(prog)
     art.program_set_ro(prog.header.id)
@@ -74,13 +76,13 @@ def main(args):
     # -------------------------------------------------------------------------------------------
 
     prog = Program()
-    prog.header.id = 2
-    prog.header.name = "Trenink 3"
+    prog.header.id = 3
+    prog.header.name = "Trenink - lepidlo"
 
     pb = ProgramBlock()
-    pb.id = 2
+    pb.id = 1
     pb.name = "Aplikace lepidla"
-    pb.on_success = 2
+    pb.on_success = 0
     pb.on_failure = 0
     prog.blocks.append(pb)
 
@@ -96,23 +98,23 @@ def main(args):
     # Simplified trolley assembly: object types
     # -------------------------------------------------------------------------------------------
 
-    art.store_object_type(obj_type("wood_46_150", 0.046, 0.046, 0.154))
-    art.store_object_type(obj_type("wood_46_300", 0.046, 0.046, 0.298))
-    art.store_object_type(obj_type("wood_46_400", 0.046, 0.046, 0.398))
+    art.store_object_type(obj_type("Spojka", 0.046, 0.046, 0.154))
+    art.store_object_type(obj_type("Kratka_noha", 0.046, 0.046, 0.298))
+    art.store_object_type(obj_type("Dlouha_noha", 0.046, 0.046, 0.398))
 
     # -------------------------------------------------------------------------------------------
     # Simplified trolley assembly: program
     # -------------------------------------------------------------------------------------------
 
     prog = Program()
-    prog.header.id = 3
+    prog.header.id = 4
     prog.header.name = "Montaz stolicky"
 
     # --- left side of the trolley ------------------------------------------------------
     pb = ProgramBlock()
-    pb.id = 2
+    pb.id = 1
     pb.name = "Bocnice 1"
-    pb.on_success = 3
+    pb.on_success = 2
     pb.on_failure = 0
     prog.blocks.append(pb)
 
@@ -138,17 +140,17 @@ def main(args):
 
     # --- right side of the trolley ------------------------------------------------------
     pb = deepcopy(pb)
-    pb.id = 3
+    pb.id = 2
     pb.name = "Bocnice 2"
-    pb.on_success = 4
+    pb.on_success = 3
     pb.on_failure = 0
     prog.blocks.append(pb)
 
     # --- connecting profiles ------------------------------------------------------------
     pb = ProgramBlock()
-    pb.id = 4
+    pb.id = 3
     pb.name = "Spojovaci dily"
-    pb.on_success = 2
+    pb.on_success = 1
     pb.on_failure = 0
     prog.blocks.append(pb)
 

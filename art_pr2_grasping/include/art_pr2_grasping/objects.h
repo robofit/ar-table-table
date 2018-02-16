@@ -24,6 +24,7 @@ typedef struct
   std::string object_id;
   geometry_msgs::PoseStamped pose;
   art_msgs::ObjectType type;
+  bool on_table;
 }
 TObjectInfo;
 
@@ -51,9 +52,11 @@ public:
 
   void clear();
 
-  void setPaused(bool paused);
+  void setPaused(bool paused, bool clear = false);
 
   void publishObject(std::string object_id);
+
+  void setPose(std::string object_id, geometry_msgs::PoseStamped ps);
 
 private:
   std::string objects_frame_id_;
@@ -77,7 +80,6 @@ private:
   bool paused_;
 
   TObjCache obj_cache_;
-
 };
 
 }  // namespace art_pr2_grasping

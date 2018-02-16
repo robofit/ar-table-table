@@ -162,7 +162,7 @@ class ObjectItem(Item):
 
             desc += "\n" + translate("ObjectItem",
                                      "TYPE: ") + self.object_type.name
-            desc += "\n" + self.get_pos_str()
+            # desc += "\n" + self.get_pos_str()
 
         self.desc.set_content(desc)
 

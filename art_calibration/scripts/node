@@ -12,7 +12,7 @@ if __name__ == '__main__':
         rate = rospy.Rate(30)
 
         while not rospy.is_shutdown():
-            node.publish_calibration()
+            node.publish_calibration(rate)
             # node.calculate_icp()
             rate.sleep()
     except rospy.ROSInterruptException:

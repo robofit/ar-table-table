@@ -33,7 +33,7 @@ class ArtRobotCalibration(ArtCellCalibration):
         if self.calibrated:
             return
         point = PointStamped()
-        point.header.frame_id = "/base_link"
+        point.header.frame_id = "base_link"
         point.point.x = 0.3
         point.point.z = 1
         if self.robot_state == 0:

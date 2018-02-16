@@ -75,16 +75,16 @@ class ArtBasicControl:
 
         rospy.loginfo("Server ready")
 
-    def publish_gripper_pose(self, frame_id, publisher):
+    def publish_gripper_pose(self, time, frame_id, publisher):
 
         ps = PoseStamped()
         ps.header.frame_id = frame_id
-        ps.header.stamp = rospy.Time(0)
+        ps.header.stamp = time
         ps.pose.orientation.w = 1
 
         try:
-            self.tfl.waitForTransform("/marker", ps.header.frame_id, ps.header.stamp, rospy.Duration(0.1))
-            ps = self.tfl.transformPose("/marker", ps)
+            self.tfl.waitForTransform("marker", ps.header.frame_id, ps.header.stamp, rospy.Duration(0.1))
+            ps = self.tfl.transformPose("marker", ps)
         except (tf.Exception, tf.ConnectivityException, tf.LookupException):
             rospy.logdebug("Failed to transform gripper pose")
             return
@@ -93,8 +93,9 @@ class ArtBasicControl:
 
     def gripper_pose_timer_cb(self, event):
 
-        self.publish_gripper_pose("l_wrist_roll_link", self.left_gripper_pose_pub)
-        self.publish_gripper_pose("r_wrist_roll_link", self.right_gripper_pose_pub)
+        now = rospy.Time.now()
+        self.publish_gripper_pose(now, "l_wrist_roll_link", self.left_gripper_pose_pub)
+        self.publish_gripper_pose(now, "r_wrist_roll_link", self.right_gripper_pose_pub)
 
     def left_interaction_on_cb(self, req):
         resp = TriggerResponse()

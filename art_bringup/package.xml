@@ -17,6 +17,10 @@
     <build_depend>art_arcode_detector</build_depend>
     <build_depend>art_projected_gui</build_depend>
     <build_depend>art_simple_tracker</build_depend>
+    <build_depend>topic_tools</build_depend>
+    <build_depend>rosbag</build_depend>
+    <build_depend>image_transport</build_depend>
+    <build_depend>image_view</build_depend>
 
     <run_depend>kinect2_bridge</run_depend>
     <run_depend>art_calibration</run_depend>
@@ -26,5 +30,9 @@
     <run_depend>art_arcode_detector</run_depend>
     <run_depend>art_projected_gui</run_depend>
     <run_depend>art_simple_tracker</run_depend>
+    <run_depend>topic_tools</run_depend>
+    <run_depend>rosbag</run_depend>
+    <run_depend>image_transport</run_depend>
+    <run_depend>image_view</run_depend>
 
 </package>

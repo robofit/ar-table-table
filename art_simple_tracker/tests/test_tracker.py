@@ -15,7 +15,7 @@ class TestSimpleTrackerRos(unittest.TestCase):
 
         self.tfl = tf.TransformListener()
         rospy.sleep(2.0)
-        self.world_frame = "/marker"
+        self.world_frame = "marker"
         self.object_id = "21"
 
     def test_object_transform(self):

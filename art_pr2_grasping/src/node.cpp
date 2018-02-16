@@ -25,7 +25,11 @@ GraspingNode::GraspingNode() : target_frame_("odom_combined"), nh_("~")
   for (int i = 0; i < groups.size(); i++)
   {
     action_servers_.push_back(boost::shared_ptr<artActionServer>(
-        new artActionServer(tfl_, objects_, groups[i], default_poses[i], gripper_state_topics[i])));
+                                new artActionServer(tfl_,
+                                                    objects_,
+                                                    groups[i],
+                                                    default_poses[i],
+                                                    gripper_state_topics[i])));
   }
 
   // TODO(ZdenekM): visual_tools + callback from objects + publish/remove

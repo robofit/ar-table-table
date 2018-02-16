@@ -1,3 +1,4 @@
 <launch>
+  <node pkg="art_sound" type="node" output="screen" name="art_sound_node" ns="/art/interface/sound"/>
   <test test-name="test_ui_core" pkg="art_projected_gui" type="test_ui_core.py" />
 </launch>

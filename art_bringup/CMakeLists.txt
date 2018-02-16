@@ -11,6 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
     art_arcode_detector
     art_projected_gui
     art_simple_tracker
+    topic_tools
+    rosbag
+    image_transport
     )
 
 catkin_package()

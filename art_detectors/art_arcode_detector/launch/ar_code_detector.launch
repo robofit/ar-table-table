@@ -10,7 +10,7 @@
 
 	<arg name="cam_image_topic" default="/art/left/kinect2/hd/image_color" />
 	<arg name="cam_info_topic" default="/art/left/kinect2/hd/camera_info" />		
-	<arg name="output_frame" default="/marker" />
+	<arg name="output_frame" default="marker" />
 
 	<node name="ar_track_alvar" machine="$(arg machine)" pkg="ar_track_alvar" type="individualMarkersNoKinect" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) 10 5" />
 	<node name="ar_code_detector" machine="$(arg machine)" pkg="art_arcode_detector" type="detector.py" output="screen" />

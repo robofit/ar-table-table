@@ -33,7 +33,7 @@ left_arm:
     #desired pose from end effector to grasp - [x,y,z]
     # TODO where is the eef here? At the groups parent link?
     # Then this is from there to tool frame
-    grasp_pose_to_eef : [-0.17, 0, 0]
+    grasp_pose_to_eef : [-0.18, 0, 0]
 
     #desired pose from end effector to grasp - [r, p, y]
     grasp_pose_to_eef_rotation : [0, 0, 0]
@@ -41,8 +41,8 @@ left_arm:
     end_effector_parent_link: 'l_wrist_roll_link'
 
     # how deep can the grasp pose go into an object
-    grasp_depth: 0.01
-    approach_retreat_desired_dist: 0.05
+    grasp_depth: 0.005
+    approach_retreat_desired_dist: 0.08
     approach_retreat_min_dist: 0.02
 
 # =====================================================
@@ -70,13 +70,13 @@ right_arm:
     postplace_time_from_start : 25.0
 
     #desired pose from end effector to grasp - [x,y,z]
-    grasp_pose_to_eef : [-0.22, 0, 0]
+    grasp_pose_to_eef : [-0.19, 0, 0]
 
     #desired pose from end effector to grasp - [r, p, y]
     grasp_pose_to_eef_rotation : [0, 0, 0]
 
     end_effector_parent_link: 'r_wrist_roll_link'
 
-    grasp_depth: 0.01
-    approach_retreat_desired_dist: 0.05
+    grasp_depth: 0.005
+    approach_retreat_desired_dist: 0.08
     approach_retreat_min_dist: 0.02

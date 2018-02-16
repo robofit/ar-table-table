@@ -5,7 +5,7 @@
     <arg name="machine" default="localhost"/>
     <arg name="namespace" default="$(arg machine)"/>
     
-    <arg name="marker_size" default="11.85" />
+    <arg name="marker_size" default="11.85" /> <!-- TODO 11.7 -> skoro ok... -->
     <arg name="max_new_marker_error" default="0.08" />
     <arg name="max_track_error" default="0.2" />
         

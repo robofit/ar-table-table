@@ -26,7 +26,7 @@ class ArtCalibration(object):
 
         self.cells = []
         cell_names = rospy.get_param("~cells").split(",")
-
+        print (cell_names)
         for cell in cell_names:
             cell = cell.strip()
 
@@ -34,14 +34,14 @@ class ArtCalibration(object):
 
             if cell == 'pr2':
                 self.cells.append(ArtRobotCalibration('pr2', '/pr2/ar_pose_marker',
-                                                      '/marker_detected', '/odom_combined',
-                                                      '/' + cell_names[0] + '_kinect2_link',
+                                                      'marker_detected', 'odom_combined',
+                                                      cell_names[0] + '_kinect2_link',
                                                       '/pr2/pointsHACK', self.listener))  # TODO: kapi hack
             else:
 
                 self.cells.append(ArtCellCalibration(cell, '/art/' + cell + '/ar_pose_marker',
-                                                     '/marker_detected', '/' + cell + '_kinect2_link',
-                                                     '/' + cell_names[0] + '_kinect2_link',
+                                                     'marker_detected', cell + '_kinect2_link',
+                                                     cell_names[0] + '_kinect2_link',
                                                      '/art/' + cell + '/kinect2/qhd/pointsHACK', self.listener))  # TODO: kapi hack
 
         self.calibrated_pub = rospy.Publisher('/art/system/calibrated', Bool,
@@ -71,17 +71,22 @@ class ArtCalibration(object):
             resp.error = "Unknown cell"
         return resp
 
-    def publish_calibration(self):
+    def publish_calibration(self, rate):
         calibrated = True
 
-        time = rospy.Time.now() + rospy.Duration(0, int(1000 / 30))
+        time = rospy.Time.now() + rate.sleep_dur
 
         for cell in self.cells:
             if cell.calibrated:
-                tr = cell.get_transform()
-                self.broadcaster.sendTransform(tr.translation, tr.rotation,
-                                               time, cell.cell_frame,
-                                               cell.world_frame)
+                tr = cell.get_transform(cell_id=cell.cell_id)
+                if cell.cell_id == "n1":
+                    self.broadcaster.sendTransform(tr.translation, tr.rotation,
+                                                   time, cell.cell_frame,
+                                                   "marker_n1")
+                else:
+                    self.broadcaster.sendTransform(tr.translation, tr.rotation,
+                                                   time, cell.cell_frame,
+                                                   cell.world_frame)
 
             else:
                 calibrated = False

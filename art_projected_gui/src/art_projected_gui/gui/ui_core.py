@@ -7,6 +7,7 @@ from art_projected_gui.helpers import conversions
 from art_msgs.srv import NotifyUserRequest
 from std_srvs.srv import Empty, EmptyRequest
 # import time
+import unicodedata
 
 
 class customGraphicsView(QtGui.QGraphicsView):
@@ -70,7 +71,7 @@ class UICore(QtCore.QObject):
         # be good for dynamic scenes
 
         self.bottom_label = LabelItem(
-            self.scene, 0.1, 0.15, self.width - 0.2, 0.05)
+            self.scene, 0.30, 0.07, self.width - 0.2, 0.03)
 
         self.selected_object_ids = []
         self.selected_object_types = []
@@ -187,10 +188,12 @@ class UICore(QtCore.QObject):
         elif message_type == NotifyUserRequest.INFO:
             log_func = rospy.loginfo
 
+        msg_ascii = unicodedata.normalize('NFKD', unicode(msg)).encode('ascii', 'ignore')
+
         if temp:
-            log_func("Notification (temp): " + msg)
+            log_func("Notification (temp): " + msg_ascii)
         else:
-            log_func("Notification: " + msg)
+            log_func("Notification: " + msg_ascii)
 
         self.bottom_label.add_msg(
             msg, message_type, rospy.Duration(min_duration), temp)
@@ -298,7 +301,6 @@ class UICore(QtCore.QObject):
         """Returns ObjectItem with given object_id or None if the ID is not found."""
 
         for it in self.get_scene_items_by_type(ObjectItem):
-
             if it.object_id == obj_id:
                 return it
 

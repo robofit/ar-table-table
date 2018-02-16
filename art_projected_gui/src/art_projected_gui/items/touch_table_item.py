@@ -24,7 +24,7 @@ class TouchPointItem(Item):
 
     def boundingRect(self):
 
-        return QtCore.QRectF(-20, -20, 40, 40)
+        return QtCore.QRectF(-1, -1, 2, 2)  # TODO make this configurable
 
     def end_of_touch(self):
 
@@ -51,7 +51,7 @@ class TouchPointItem(Item):
                     continue
 
                 # TODO what types to skip?
-                if isinstance(it, TouchTableItem) or isinstance(it, TouchPointItem) or isinstance(it, DescItem) or isinstance(it, LabelItem):
+                if isinstance(it, TouchTableItem) or isinstance(it, TouchPointItem) or isinstance(it, DescItem):
                     continue
 
                 if self.collidesWithItem(it):
@@ -104,7 +104,7 @@ class TouchPointItem(Item):
             painter.setBrush(QtCore.Qt.green)
 
         painter.setOpacity(0.5)
-        painter.drawEllipse(QtCore.QPoint(0, 0), 20, 20)
+        painter.drawEllipse(QtCore.QPoint(0, 0), 2, 2)  # TODO draw based on b.r. size
 
 
 # TODO make a common helper class from this (also used in PoseStampedCursorItem)

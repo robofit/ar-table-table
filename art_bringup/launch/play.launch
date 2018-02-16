@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="pr2_camera" default="true"/>
+    <arg name="n1_kinect" default="true"/>
+    <arg name="n2_kinect" default="true"/>
+    <arg name="usb_cam" default="true"/>
+    <arg name="surv_kinect" default="false"/>
+
+    <group if="$(arg pr2_camera)">
+
+        <node pkg="image_view" name="play1" type="image_view" args="image:=/pr2_camera/image compressed" >
+
+        </node>
+    </group>
+    <group if="$(arg n1_kinect)">
+
+        <node pkg="image_view" name="play2" type="image_view" args="image:=/n1_kinect/image compressed" >
+
+        </node>
+    </group>
+
+    <group if="$(arg n2_kinect)">
+
+        <node pkg="image_view" name="play3" type="image_view" args="image:=/n2_kinect/image compressed" >
+
+        </node>
+    </group>
+
+    <group if="$(arg surv_kinect)">
+
+        <node pkg="image_view" name="play5" type="image_view" args="image:=/surv_kinect/image compressed" >
+
+        </node>
+    </group>
+
+    <group if="$(arg usb_cam)">
+
+        <node pkg="image_view" name="play4" type="image_view" args="image:=/usb_cam/image compressed" >
+
+        </node>
+    </group>
+
+
+
+</launch>

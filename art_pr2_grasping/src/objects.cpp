@@ -23,18 +23,18 @@ Objects::Objects(boost::shared_ptr<tf::TransformListener> tfl, std::string targe
   paused_ = false;
 }
 
-void Objects::setPaused(bool paused)
+void Objects::setPaused(bool paused, bool clear)
 {
   boost::recursive_mutex::scoped_lock lock(mutex_);
 
   paused_ = paused;
 
-  if (paused)
+  if (paused && clear)
   {
     TObjectMap::iterator it;
     for (it = objects_.begin(); it != objects_.end(); ++it)
     {
-      if (isGrasped(it->first))
+      if (isGrasped(it->first) || it->second.on_table)
         continue;
       visual_tools_->cleanupCO(it->first);
     }
@@ -159,39 +159,40 @@ void Objects::detectedObjectsCallback(const art_msgs::InstancesArrayConstPtr& ms
       continue;
     }
 
+    if (isGrasped(msg->instances[i].object_id)) continue;
+
     if (isKnownObject(msg->instances[i].object_id))
     {
       objects_[msg->instances[i].object_id].pose = ps;
     }
     else
     {
-
       TObjCache::iterator it = obj_cache_.find(msg->instances[i].object_type);
-      if (it == obj_cache_.end()) {
+      if (it == obj_cache_.end())
+      {
+        art_msgs::getObjectType srv;
+        srv.request.name = msg->instances[i].object_type;
 
-          art_msgs::getObjectType srv;
-          srv.request.name = msg->instances[i].object_type;
+        if (!object_type_srv_.call(srv))
+        {
+          ROS_ERROR_NAMED("objects", "Failed to call object_type service");
+          continue;
+        }
 
-          if (!object_type_srv_.call(srv))
-          {
-            ROS_ERROR_NAMED("objects", "Failed to call object_type service");
-            continue;
-          }
+        if (!srv.response.success)
+        {
+          ROS_ERROR_NAMED("objects", "Call to object_type service returned failure.");
+          continue;
+        }
 
-          if (!srv.response.success) {
-
-            ROS_ERROR_NAMED("objects", "Call to object_type service returned failure.");
-            continue;
-          }
-
-          obj_cache_[msg->instances[i].object_type] = srv.response.object_type;
-
+        obj_cache_[msg->instances[i].object_type] = srv.response.object_type;
       }
 
       TObjectInfo obj;
       obj.object_id = msg->instances[i].object_id;
       obj.pose = ps;
       obj.type = obj_cache_[msg->instances[i].object_type];
+      obj.on_table = msg->instances[i].on_table;
       objects_[msg->instances[i].object_id] = obj;
     }
   }
@@ -208,6 +209,14 @@ void Objects::detectedObjectsCallback(const art_msgs::InstancesArrayConstPtr& ms
     publishObject(it->first);
   }
 }
+
+void Objects::setPose(std::string object_id, geometry_msgs::PoseStamped ps)
+{
+  boost::recursive_mutex::scoped_lock lock(mutex_);
+
+  objects_[object_id].pose = ps;
+}
+
 
 void Objects::publishObject(std::string object_id)
 {

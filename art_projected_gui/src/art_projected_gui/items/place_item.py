@@ -210,8 +210,6 @@ class PlaceItem(ObjectItem):
 
     def point_changed(self, pt, finished=False):
 
-        print "point_changed"
-
         # follow angle between "free" point and object center, after release put object back on topLeft corner
         angle = math.atan2(self.point.scenePos().y() - self.scenePos().y(), self.point.scenePos().x() - self.scenePos().x()) + 2.355
 

@@ -26,6 +26,7 @@ class DialogItem(Item):
 
         self.items = []
 
+        # TODO create button, measure them, arrange them
         self.w = (len(answers) + 1) * self.sp
 
         for answer in answers:

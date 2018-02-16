@@ -9,6 +9,7 @@ from std_srvs.srv import TriggerResponse, TriggerRequest, Trigger
 from std_msgs.msg import Bool
 from std_srvs.srv import Empty, EmptyRequest
 from geometry_msgs.msg import PointStamped
+from pr2_controllers_msgs.msg import Pr2GripperCommand
 
 
 class ArtPr2Interface(ArtBrainRobotInterface):
@@ -29,6 +30,10 @@ class ArtPr2Interface(ArtBrainRobotInterface):
             '/pr2_ethercat/reset_motors', Empty)  # TODO wait for service? where?
 
         self.look_at_pub = rospy.Publisher(robot_helper.robot_ns + "/look_at", PointStamped, queue_size=10)
+
+        self.gripper_pubs = []
+        for pref in ('/l_', '/r_'):
+            self.gripper_pubs.append(rospy.Publisher(pref + 'gripper_controller/command', Pr2GripperCommand, queue_size=10))
 
         for arm in self._arms:  # type: ArtGripper
             if arm.arm_id == self.LEFT_ARM:
@@ -159,6 +164,28 @@ class ArtPr2Interface(ArtBrainRobotInterface):
 
         self.set_halted(req.data)
 
+    def close_grippers(self):
+
+        rospy.loginfo("Closing both grippers.")
+        msg = Pr2GripperCommand()
+        msg.position = 0.0
+        msg.max_effort = 10000.0
+
+        for pub in self.gripper_pubs:
+            pub.publish(msg)
+            pub.publish(msg)
+            pub.publish(msg)
+
+    def arms_get_ready(self, arm_ids=[]):
+
+        self.close_grippers()
+        return super(ArtPr2Interface, self).arms_get_ready(arm_ids)
+
+    def arms_reinit(self, arm_ids=[]):
+
+        self.close_grippers()
+        return super(ArtPr2Interface, self).arms_reinit(arm_ids)
+
     def look_at(self, x, y, z, frame_id="marker"):
         point = PointStamped()
         point.header.frame_id = frame_id
@@ -175,14 +202,14 @@ class ArtPr2Interface(ArtBrainRobotInterface):
         self.look_at_point(obj.pose.position)
         return super(ArtPr2Interface, self).pick_object(obj, pick_instruction_id, arm_id, pick_only_y_axis, from_feeder)
 
-    def place_object_to_pose(self, place_pose, arm_id, objects_frame_id="/marker", pick_only_y_axis=False):
+    def place_object_to_pose(self, place_pose, arm_id, objects_frame_id="marker", pick_only_y_axis=False):
 
         assert isinstance(place_pose, PoseStamped)
         self.look_at_point(place_pose.pose.position)
 
         return super(ArtPr2Interface, self).place_object_to_pose(place_pose, arm_id, objects_frame_id, pick_only_y_axis)
 
-    def move_arm_to_pose(self, pose, arm_id=None):
+    def move_arm_to_pose(self, pose, arm_id=None, picking=False, drilling=False):
         assert isinstance(pose, PoseStamped)
         self.look_at_point(pose.pose.position)
         return super(ArtPr2Interface, self).move_arm_to_pose(pose, arm_id)

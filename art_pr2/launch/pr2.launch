@@ -6,6 +6,6 @@
 	<include file="$(find art_pr2)/launch/object_detector.launch"></include>
 	<!--include file="$(find art_pr2)/launch/skeleton_tracking.launch"></include>-->
 	<include file="$(find art_basic_control)/launch/node.launch"></include>
-	<include file="$(find pr2_moveit_config)/launch/move_group.launch"></include>
+	<include file="$(find art_pr2_moveit_config)/launch/move_group.launch"></include>
 	<node pkg="art_pr2_arm_navigation" name="pr2_arm_nav_node" type="node.py" output="screen"/>
 </launch>

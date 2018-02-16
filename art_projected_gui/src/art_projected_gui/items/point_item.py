@@ -60,6 +60,9 @@ class PointItem(Item):
         if not self.scene():
             return
 
+        if self.fixed:
+            return
+
         painter.setClipRect(option.exposedRect)
         painter.setRenderHint(QtGui.QPainter.Antialiasing)
 

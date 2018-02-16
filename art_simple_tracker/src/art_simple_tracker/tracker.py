@@ -56,17 +56,20 @@ class TrackedObject:
             rospy.logdebug("Object " + self.object_id + " seen by " + ps.header.frame_id + " is too far (or too close): " + str(dist))
             return
 
+        try:
+
+            pps = self.transform(ps)
+
+        except tf.Exception as e:
+
+            rospy.logwarn("Transform at " + str(ps.header.stamp.to_sec()) + " between " + self.target_frame +
+                          " and " + ps.header.frame_id + " not available: " + str(e))
+            return
+
         if ps.header.frame_id not in self.meas:
             self.meas[ps.header.frame_id] = []
 
-        try:
-
-            self.meas[ps.header.frame_id].append([dist, self.transform(ps)])
-
-        except tf.Exception:
-
-            rospy.logwarn("Transform between " + self.target_frame +
-                          " and " + ps.header.frame_id + " not available!")
+        self.meas[ps.header.frame_id].append([dist, self.transform(pps)])
 
     def prune_meas(self, now, max_age):
 
@@ -146,6 +149,9 @@ class TrackedObject:
         inst.pose.position.y = np.average(py, weights=w)
         inst.pose.position.z = np.average(pz, weights=w)
 
+        # TODO read table size from param
+        inst.on_table = 0 < inst.pose.position.x < 1.5 and 0 < inst.pose.position.x < 0.7
+
         ar = np.average(r, axis=0, weights=w)
         ap = np.average(p, axis=0, weights=w)
         ay = np.average(y, axis=0, weights=w)
@@ -179,15 +185,16 @@ class TrackedObject:
 
 # "tracking" of static objects
 class ArtSimpleTracker:
-    def __init__(self, target_frame="/marker"):
+    def __init__(self, target_frame="marker"):
 
         self.target_frame = target_frame
         self.tfl = tf.TransformListener()
         self.lock = threading.Lock()
+        self.detection_enabled = True
         self.sub = rospy.Subscriber(
-            "/art/object_detector/object", InstancesArray, self.cb, queue_size=10)
+            "/art/object_detector/object", InstancesArray, self.cb, queue_size=1)
         self.pub = rospy.Publisher(
-            "/art/object_detector/object_filtered", InstancesArray, queue_size=10, latch=True)
+            "/art/object_detector/object_filtered", InstancesArray, queue_size=1, latch=True)
         self.timer = rospy.Timer(rospy.Duration(0.1), self.timer_cb)
         self.meas_max_age = rospy.Duration(5.0)
         self.prune_timer = rospy.Timer(rospy.Duration(1.0), self.prune_timer_cb)
@@ -197,6 +204,63 @@ class ArtSimpleTracker:
         self.srv_set_flag = rospy.Service('/art/object_detector/flag/set', ObjectFlagSet, self.srv_set_flag_cb)
         self.srv_clear_flag = rospy.Service('/art/object_detector/flag/clear', ObjectFlagClear, self.srv_clear_flag_cb)
         self.srv_clear_all_flags = rospy.Service('/art/object_detector/flag/clear_all', Empty, self.srv_clear_all_flags_cb)
+
+        self.use_forearm_cams = False
+        self.forearm_cams = ("/l_forearm_cam_optical_frame", "/r_forearm_cam_optical_frame")
+        self.srv_enable_forearm = rospy.Service('/art/object_detector/forearm/enable', Empty, self.srv_enable_forearm_cb)
+        self.srv_disable_forearm = rospy.Service('/art/object_detector/forearm/disable', Empty, self.srv_disable_forearm_cb)
+        self.srv_enable_detection = rospy.Service('/art/object_detector/all/enable', Empty,
+                                                  self.srv_enable_detection_cb)
+        self.srv_disable_detection = rospy.Service('/art/object_detector/all/disable', Empty,
+                                                   self.srv_disable_detection_cb)
+
+    def srv_enable_forearm_cb(self, req):
+
+        rospy.loginfo("Enabling forearm cameras.")
+        self.use_forearm_cams = True
+
+        return EmptyResponse()
+
+    def srv_disable_forearm_cb(self, req):
+
+        rospy.loginfo("Disabling forearm cameras.")
+        self.use_forearm_cams = False
+
+        with self.lock:
+            for object_id, obj in self.objects.iteritems():
+
+                for cf in self.forearm_cams:
+
+                    try:
+                        del obj.meas[cf]
+                    except KeyError:
+                        pass
+
+        return EmptyResponse()
+
+    def srv_enable_detection_cb(self, req):
+
+        rospy.loginfo("Enabling object detection.")
+        self.detection_enabled = True
+
+        return EmptyResponse()
+
+    def srv_disable_detection_cb(self, req):
+
+        rospy.loginfo("Disabling object detection.")
+        self.detection_enabled = False
+
+        with self.lock:
+            for object_id, obj in self.objects.iteritems():
+
+                for cf in self.forearm_cams:
+
+                    try:
+                        del obj.meas[cf]
+                    except KeyError:
+                        pass
+
+        return EmptyResponse()
 
     def srv_clear_all_flags_cb(self, req):
 
@@ -300,11 +364,16 @@ class ArtSimpleTracker:
 
     def cb(self, msg):
 
-        with self.lock:
+        if not self.detection_enabled:
+            return
+        if not self.use_forearm_cams and msg.header.frame_id in self.forearm_cams:
+            return
 
-            if msg.header.frame_id == self.target_frame:
-                rospy.logwarn_throttle(1.0, "Some detections are already in target frame!")
-                return
+        if msg.header.frame_id == self.target_frame:
+            rospy.logwarn_throttle(1.0, "Some detections are already in target frame!")
+            return
+
+        with self.lock:
 
             for inst in msg.instances:
 

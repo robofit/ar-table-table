@@ -92,8 +92,8 @@ class ArtCellCalibration(object):
                 return False'''
         point, m = ArtCalibrationHelper.transform_from_markers_positions(self.positions[0],
                                                                          self.positions[1],
-                                                                         0,
-                                                                         self.positions[3])
+                                                                         self.positions[2],
+                                                                         self.positions[3], cell_id=self.cell_id)
         if point is None or m is None:
             if point is None:
                 rospy.logerr("Origin was not computed!")
@@ -109,13 +109,15 @@ class ArtCellCalibration(object):
         self.calibrated = True
         rospy.loginfo("Cell: " + str(self.cell_id) + " calibration done")
 
-    def get_transform(self):
+    def get_transform(self, cell_id="all"):
         if not self.calibrated:
 
             return None
 
         tr = deepcopy(self.transformation)
         tr.translation[0] += self.x_offset
+        if cell_id == "n1":
+            tr.translation[0] -= 1.135
         tr.translation[1] += self.y_offset
         tr.translation[2] += self.z_offset
         (x, y, z) = transformations.euler_from_quaternion(tr.rotation)
@@ -137,8 +139,8 @@ class ArtCellCalibration(object):
         all_markers = True
         for i in xrange(4):
 
-            if i == 2:
-                continue
+            # if i == 2:
+            #    continue
 
             if self.cnt[i] >= self.avg:
                 continue
@@ -154,8 +156,8 @@ class ArtCellCalibration(object):
         if all_markers:
 
             for i in xrange(4):
-                if i == 2:
-                    continue
+                # if i == 2:
+                #    continue
                 self.positions[i] /= self.avg
 
             self.stop_marker_detection()

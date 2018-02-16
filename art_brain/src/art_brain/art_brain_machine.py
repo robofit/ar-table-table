@@ -20,37 +20,37 @@ class ArtBrainMachine(object):
 
               # basic instructions
               State(name='get_ready', on_enter=[
-                    'check_robot_in', 'state_get_ready'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_get_ready'], on_exit=['check_robot_out']),
 
               # synchronization with the user
               State(name='wait_for_user', on_enter=[
-                    'check_robot_in', 'state_wait_for_user'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_wait_for_user'], on_exit=['check_robot_out']),
               State(name='wait_until_user_finishes', on_enter=[
-                    'check_robot_in', 'state_wait_until_user_finishes'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_wait_until_user_finishes'], on_exit=['check_robot_out']),
 
               # manipulation - pick
               State(name='pick_from_polygon', on_enter=[
-                    'check_robot_in', 'state_pick_from_polygon'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_pick_from_polygon'], on_exit=['check_robot_out']),
               State(name='pick_from_feeder', on_enter=[
-                    'check_robot_in', 'state_pick_from_feeder'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_pick_from_feeder'], on_exit=['check_robot_out']),
               State(name='pick_object_id', on_enter=[
-                    'check_robot_in', 'state_pick_object_id'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_pick_object_id'], on_exit=['check_robot_out']),
 
               # manipulation - place
               State(name='place_to_pose', on_enter=[
-                    'check_robot_in', 'state_place_to_pose'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_place_to_pose'], on_exit=['check_robot_out']),
               State(name='place_to_grid', on_enter=[
-                    'check_robot_in', 'state_place_to_grid'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_place_to_grid'], on_exit=['check_robot_out']),
 
               # manipulation
               State(name='path_through_points', on_enter=[
-                    'check_robot_in', 'state_path_through_points'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_path_through_points'], on_exit=['check_robot_out']),
               State(name='welding_points', on_enter=[
-                    'check_robot_in', 'state_welding_points'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_welding_points'], on_exit=['check_robot_out']),
               State(name='welding_seam', on_enter=[
-                    'check_robot_in', 'state_welding_seam'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_welding_seam'], on_exit=['check_robot_out']),
               State(name='drill_points', on_enter=[
-                    'check_robot_in', 'state_drill_points'], on_exit=['check_robot_out']),
+                    'state_update_program_item', 'check_robot_in', 'state_drill_points'], on_exit=['check_robot_out']),
 
               State(name='program_error', on_enter=[
                     'state_program_error'], on_exit=[]),
@@ -78,48 +78,48 @@ class ArtBrainMachine(object):
                     'check_robot_in', 'learning_load_block_id', 'state_learning_pick_from_polygon_run'],
                     on_exit=['check_robot_out']),
               State(name='learning_pick_from_feeder_run', on_enter=[
-                   'check_robot_in', 'learning_load_block_id', 'state_learning_pick_from_feeder_run'],
-                    on_exit=['check_robot_out']),
-              State(name='learning_pick_object_id_run', on_enter=[
-                    'learning_load_block_id', 'state_learning_pick_object_id_run'], on_exit=[]),
+                  'check_robot_in', 'learning_load_block_id', 'state_learning_pick_from_feeder_run'],
+        on_exit=['check_robot_out']),
+        State(name='learning_pick_object_id_run', on_enter=[
+            'learning_load_block_id', 'state_learning_pick_object_id_run'], on_exit=[]),
 
-              # learning placing
-              State(name='learning_place_to_pose', on_enter=[
-                    'learning_load_block_id', 'state_learning_place_to_pose'], on_exit=[]),
-              State(name='learning_place_to_pose_run', on_enter=[
-                    'check_robot_in', 'learning_load_block_id', 'state_learning_place_to_pose_run'],
-                    on_exit=['check_robot_out']),
-              State(name='learning_place_to_grid', on_enter=[
-                    'learning_load_block_id', 'state_learning_place_to_grid'], on_exit=[]),
+        # learning placing
+        State(name='learning_place_to_pose', on_enter=[
+            'learning_load_block_id', 'state_learning_place_to_pose'], on_exit=[]),
+        State(name='learning_place_to_pose_run', on_enter=[
+            'check_robot_in', 'learning_load_block_id', 'state_learning_place_to_pose_run'],
+        on_exit=['check_robot_out']),
+        State(name='learning_place_to_grid', on_enter=[
+            'learning_load_block_id', 'state_learning_place_to_grid'], on_exit=[]),
 
-              # learning drilling and welding
-              State(name='learning_welding_point', on_enter=[
-                    'learning_load_block_id', 'state_learning_welding_point'], on_exit=[]),
-              State(name='learning_welding_point_run', on_enter=[
-                    'learning_load_block_id', 'state_learning_welding_point_run'], on_exit=[]),
+        # learning drilling and welding
+        State(name='learning_welding_point', on_enter=[
+            'learning_load_block_id', 'state_learning_welding_point'], on_exit=[]),
+        State(name='learning_welding_point_run', on_enter=[
+            'learning_load_block_id', 'state_learning_welding_point_run'], on_exit=[]),
 
-              State(name='learning_welding_seam', on_enter=[
-                    'learning_load_block_id', 'state_learning_welding_seam'], on_exit=[]),
-              State(name='learning_welding_seam_run', on_enter=[
-                    'learning_load_block_id', 'state_learning_welding_seam_run'], on_exit=[]),
+        State(name='learning_welding_seam', on_enter=[
+            'learning_load_block_id', 'state_learning_welding_seam'], on_exit=[]),
+        State(name='learning_welding_seam_run', on_enter=[
+            'learning_load_block_id', 'state_learning_welding_seam_run'], on_exit=[]),
 
-              State(name='learning_drill_points', on_enter=[
-                    'check_robot_in', 'learning_load_block_id', 'state_learning_drill_points'], on_exit=[
-                    'check_robot_out', 'state_learning_drill_points_exit']),
-              State(name='learning_drill_points_run', on_enter=[
-                    'check_robot_in', 'learning_load_block_id', 'state_learning_drill_points_run'],
-                    on_exit=['check_robot_out']),
+        State(name='learning_drill_points', on_enter=[
+            'check_robot_in', 'learning_load_block_id', 'state_learning_drill_points'], on_exit=[
+            'check_robot_out', 'state_learning_drill_points_exit']),
+        State(name='learning_drill_points_run', on_enter=[
+            'check_robot_in', 'learning_load_block_id', 'state_learning_drill_points_run'],
+        on_exit=['check_robot_out']),
 
-              # learning others
+        # learning others
 
-              State(name='learning_wait', on_enter=[
-                    'learning_load_block_id', 'state_learning_wait'], on_exit=[]),
-              State(name='learning_step_done', on_enter=[
-                    'learning_load_block_id', 'state_learning_step_done'], on_exit=[]),
-              State(name='learning_step_error', on_enter=[
-                    'learning_load_block_id', 'state_learning_step_error'], on_exit=[]),
-              State(name='learning_done', on_enter=[
-                    'learning_load_block_id', 'state_learning_done'], on_exit=[])]
+        State(name='learning_wait', on_enter=[
+            'learning_load_block_id', 'state_learning_wait'], on_exit=[]),
+        State(name='learning_step_done', on_enter=[
+            'learning_load_block_id', 'state_learning_step_done'], on_exit=[]),
+        State(name='learning_step_error', on_enter=[
+            'learning_load_block_id', 'state_learning_step_error'], on_exit=[]),
+        State(name='learning_done', on_enter=[
+            'learning_load_block_id', 'state_learning_done'], on_exit=[])]
 
     def __init__(self):
         self.name = 'brain'

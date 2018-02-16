@@ -95,7 +95,6 @@ class ArtBrain(object):
         self.fsm.state_learning_step_error = self.state_learning_step_error
         self.fsm.state_learning_done = self.state_learning_done
         self.fsm.state_learning_pick_from_feeder_exit = self.state_learning_pick_from_feeder_exit
-        self.fsm.state_update_program_item = self.state_update_program_item
         self.fsm.state_shutdown = self.state_shutdown
         self.fsm.learning_load_block_id = self.learning_load_block_id
         self.fsm.state_learning_welding_point = self.state_learning_welding_point
@@ -139,9 +138,6 @@ class ArtBrain(object):
 
         self.robot_parameters = rospy.get_param(self.robot_ns)
         self.robot_type = rospy.get_param(self.robot_ns + "/robot_id", "")
-
-        self.program_resume_after_restart = rospy.get_param("/art/brain/executing_program", False)
-        self.learning_resume_after_restart = rospy.get_param("/art/brain/learning_program", False)
         self.rh = None
 
         while self.rh is None:
@@ -238,14 +234,6 @@ class ArtBrain(object):
         self.set_object_flag_srv_client = ArtBrainUtils.create_service_client(
             '/art/object_detector/flag/set', ObjectFlagSet)
 
-        # TODO 'hack' for experiment
-        self.forearm_enable_srv_client = ArtBrainUtils.create_service_client(
-            '/art/object_detector/forearm/enable', Empty)
-        self.forearm_disable_srv_client = ArtBrainUtils.create_service_client(
-            '/art/object_detector/forearm/disable', Empty)
-
-        self.forearm_disable_srv_client.call()
-
         r = rospy.Rate(1)
         if not self.system_calibrated or not self.projectors_calibrated:
             self.robot.prepare_for_calibration()
@@ -292,12 +280,19 @@ class ArtBrain(object):
                 attempt += 1
                 while not self.table_calibrated and self.table_calibrating:
                     rospy.sleep(1)
+<<<<<<< HEAD
+        if self.robot.halted:
+            rospy.logwarn("Robot halted!")
+        else:
+            self.try_robot_arms_get_ready()
+=======
         r = rospy.Rate(1)
-        while self.robot.halted and not rospy.is_shutdown():
+        while self.robot.halted:
             rospy.logwarn("Robot halted! Please unhalt!")
             r.sleep()
 
-        self.try_robot_arms_get_ready()
+        self.robot.arms_get_ready()
+>>>>>>> 75ffc842712cf04d4199f395133f83fbf21540d7
         rospy.loginfo("Brain init done")
         self.initialized = True
         self.fsm.init()
@@ -312,44 +307,11 @@ class ArtBrain(object):
 
     def state_waiting_for_action(self, event):
         rospy.logdebug('Current state: state_waiting_for_action')
-
-        if self.program_resume_after_restart or self.learning_resume_after_restart:
-            program_id = rospy.get_param("/art/brain/program_id", None)
-            self.block_id = rospy.get_param("/art/brain/block_id", None)
-            item_id = rospy.get_param("/art/brain/item_id", None)
-            if self.block_id is None or item_id is None or program_id is None:
-                rospy.logwarn("Could not resume program!")
-                self.learning_resume_after_restart = False
-                self.program_resume_after_restart = False
-                return
-            program = self.art.load_program(program_id)
-
-            if not self.ph.load(program):
-                rospy.logwarn("Could not resume program!")
-                return
-            if self.program_resume_after_restart:
-                rospy.logdebug('Starting program')
-
-                rospy.Timer(rospy.Duration(
-                    1), self.program_start_timer_cb, oneshot=True)
-                rospy.logdebug("program started")
-            elif self.learning_resume_after_restart:
-                self.learning_resume_after_restart = False
-                rospy.logdebug('Starting learning')
-                self.state_manager.update_program_item(program_id, self.block_id,
-                                                       self.ph.get_item_msg(self.block_id, item_id), auto_send=True)
-                self.state_manager.set_system_state(InterfaceState.STATE_LEARNING)
-                self.fsm.learning_start()
-        else:
-            self.state_manager.set_system_state(InterfaceState.STATE_IDLE)
+        self.state_manager.set_system_state(InterfaceState.STATE_IDLE)
 
     def state_shutdown(self, event):
         rospy.logdebug('Current state: state_shutdown')
         sys.exit()
-
-    def state_update_program_item(self, event):
-        self.state_manager.update_program_item(
-            self.ph.get_program_id(), self.block_id, self.instruction, auto_send=False)
 
     # ***************************************************************************************
     #                                  STATES PROGRAM
@@ -358,31 +320,21 @@ class ArtBrain(object):
     def state_program_init(self, event):
         rospy.logdebug('Current state: state_program_init')
         rospy.logdebug('New program ready!')
-        rospy.set_param("/art/brain/executing_program", True)
 
         if self.ph is None:
             self.fsm.error(severity=ArtBrainErrorSeverities.SEVERE,
                            error=ArtBrainErrors.ERROR_NO_PROGRAM_HELPER)
             return
-        item_id = None
-        if self.program_resume_after_restart:
-            item_id = rospy.get_param("/art/brain/item_id", None)
-        else:
-            self.clear_all_object_flags_srv_client.call(EmptyRequest())
 
-            (self.block_id, item_id) = self.ph.get_first_item_id()
+        self.clear_all_object_flags_srv_client.call(EmptyRequest())
+
+        (self.block_id, item_id) = self.ph.get_first_item_id()
         self.instruction = self.ph.get_item_msg(self.block_id, item_id)
 
-        rospy.set_param("/art/brain/program_id", self.ph.get_program_id())
-        rospy.set_param("/art/brain/block_id", self.block_id)
-        rospy.set_param("/art/brain/item_id", item_id)
         self.executing_program = True
         self.program_paused = False
         self.program_pause_request = False
-        if self.program_resume_after_restart:
-            self.robot.init_arms(reset_holding_object=False)
-        else:
-            self.robot.init_arms(reset_holding_object=True)
+        self.robot.init_arms()
         self.state_manager.set_system_state(
             InterfaceState.STATE_PROGRAM_RUNNING, auto_send=False)
         self.fsm.program_init_done()
@@ -410,20 +362,6 @@ class ArtBrain(object):
             if flag.key == "CLEAR_OBJECT_FLAGS" and flag.value == "true":
                 self.clear_all_object_flags_srv_client.call(EmptyRequest())
 
-        '''while self.program_resume_after_restart and self.instruction.type in [ProgramItem.PLACE_TO_POSE,
-                                                                           ProgramItem.PLACE_TO_GRID]:
-
-            (self.block_id, item_id) = self.ph.get_id_on_success(
-                self.block_id, self.instruction.id)
-
-            if self.block_id == 0:
-                self.fsm.finished()
-                return
-
-            self.instruction = self.ph.get_item_msg(self.block_id, item_id)
-        '''
-        self.program_resume_after_restart = False
-
         instructions = {
             ProgramItem.GET_READY: self.fsm.get_ready,
             ProgramItem.PICK_FROM_POLYGON: self.fsm.pick_from_polygon,
@@ -438,9 +376,7 @@ class ArtBrain(object):
             ProgramItem.WAIT_FOR_USER: self.fsm.wait_for_user,
             ProgramItem.WAIT_UNTIL_USER_FINISHES: self.fsm.wait_until_user_finishes,
         }
-        rospy.set_param("/art/brain/program_id", self.ph.get_program_id())
-        rospy.set_param("/art/brain/block_id", self.block_id)
-        rospy.set_param("/art/brain/item_id", self.instruction.id)
+
         instruction_transition = instructions.get(self.instruction.type, None)
         rospy.logdebug(instruction_transition)
         rospy.logdebug(self.instruction.type)
@@ -456,7 +392,6 @@ class ArtBrain(object):
 
     def state_pick_from_polygon(self, event):
         rospy.logdebug('Current state: state_pick_from_polygon')
-
         if not self.check_robot():
             return
         self.pick_object_from_polygon(self.instruction)
@@ -465,9 +400,7 @@ class ArtBrain(object):
         rospy.logdebug('Current state: state_pick_from_feeder')
         if not self.check_robot():
             return
-        self.forearm_enable_srv_client.call()
         self.pick_object_from_feeder(self.instruction)
-        self.forearm_disable_srv_client.call()
 
     def state_pick_object_id(self, event):
         if not self.check_robot():
@@ -626,11 +559,6 @@ class ArtBrain(object):
         self.state_manager.send()
         self.executing_program = False
         self.robot.arms_reinit()
-        rospy.set_param("/art/brain/executing_program", False)
-        rospy.delete_param("/art/brain/program_id")
-        rospy.delete_param("/art/brain/block_id")
-        rospy.delete_param("/art/brain/item_id")
-        self.program_resume_after_restart = False
         self.fsm.done()
 
     def state_program_error(self, event):
@@ -684,7 +612,6 @@ class ArtBrain(object):
     def state_learning_init(self, event):
         rospy.logdebug('Current state: Teaching init')
         self.learning = True
-        rospy.set_param("/art/brain/learning_program", True)
         self.fsm.init_done()
 
     def learning_load_block_id(self, event):
@@ -718,9 +645,7 @@ class ArtBrain(object):
     def state_learning_pick_from_feeder_run(self, event):
         rospy.logdebug('Current state: state_learning_pick_from_feeder_run')
         instruction = self.state_manager.state.program_current_item  # type: ProgramItem
-        self.forearm_enable_srv_client.call()
         self.pick_object_from_feeder(instruction)
-        self.forearm_disable_srv_client.call()
 
     def state_learning_pick_from_feeder_exit(self, event):
         rospy.logdebug('Current state: state_learning_pick_from_feeder_exit')
@@ -791,7 +716,6 @@ class ArtBrain(object):
     def state_learning_drill_points_run(self, event):
         rospy.logdebug('Current state: state_learning_drill_points_run')
         instruction = self.state_manager.state.program_current_item  # type: ProgramItem
-
         self.drill_points(instruction, set_drilled_flag=False)
         self.try_robot_arms_get_ready()
 
@@ -898,7 +822,7 @@ class ArtBrain(object):
         else:
             pick_pose = pick_pose[0]
         arm_id = self.robot.select_arm_for_pick_from_feeder(pick_pose, self.tf_listener)
-        severity, error, arm_id = self.robot.move_arm_to_pose(pick_pose, arm_id, picking=True)
+        severity, error, arm_id = self.robot.move_arm_to_pose(pick_pose, arm_id)
         if error is not None:
             if error is not ArtBrainErrors.ERROR_ROBOT_HALTED:
                 self.try_robot_arms_get_ready([arm_id])
@@ -915,8 +839,6 @@ class ArtBrain(object):
         pick_object_dist = None
         rospy.loginfo("Looking for: " + str(obj.object_type))
 
-        ignored_objects = []
-
         while True:
 
             now = rospy.Time.now()
@@ -930,50 +852,27 @@ class ArtBrain(object):
 
             for inst in self.objects.instances:  # type: ObjInstance
 
-                if inst.object_id in ignored_objects:
-                    continue
-
-                if inst.object_type != obj.object_type:
-                    continue
-
                 # TODO read table size from some param
                 # TODO on_table -> use method from some helper class (shared with gui...), add it to message?
                 on_table = inst.pose.position.z < 0.1 and 0 < inst.pose.position.x < 1.5
+                if inst.object_type == obj.object_type and not on_table:
 
-                if on_table:
-
-                    rospy.logdebug("Ignoring 'on_table' object: " + inst.object_id)
-                    ignored_objects.append(inst.object_id)
-                    continue
-
-                ps = PoseStamped()
-                ps.header.frame_id = self.objects.header.frame_id
-                ps.header.stamp = rospy.Time(0)
-                ps.pose = inst.pose
-                # TODO compute transform once and then only apply it
-                ps = self.tf_listener.transformPose(self.robot.get_arm_by_id(arm_id).gripper_link, ps)
-                # distance in x does not matter - we want the object closest to the x-axis of gripper
-                dist = math.sqrt(ps.pose.position.y ** 2 + ps.pose.position.z ** 2)
-                rospy.logdebug("Distance to object ID " + inst.object_id + " is: " + str(dist) + ", dist to gripper: " + str(ps.pose.position.x))
-
-                if dist > 0.1:
-
-                    rospy.logdebug("Object is too far in y/z.")
-                    continue
-
-                # dist in x has to be bigger than length of the gripper
-                if 0.05 < ps.pose.position.x < 0.2:
-
-                    if pick_object_dist is None or dist < pick_object_dist:
+                    ps = PoseStamped()
+                    ps.header.frame_id = self.objects.header.frame_id
+                    ps.header.stamp = now
+                    ps.pose = inst.pose
+                    # TODO compute transform once and then only apply it
+                    ps = self.tf_listener.transformPose(self.robot.get_arm_by_id(arm_id).gripper_link, ps)
+                    # distance in x does not matter - we want the object closest to the x-axis of gripper
+                    dist = math.sqrt(ps.pose.position.y ** 2 + ps.pose.position.z ** 2)
+                    rospy.logdebug("Distance to object ID " + inst.object_id + " is: " + str(dist) + ", dist to gripper: " + str(ps.pose.position.x))
+                    # dist in x has to be bigger than length of the gripper
+                    if ps.pose.position.x > 0.2 and (dist is None or dist < pick_object_dist):
                         object_found_time = now
                         pick_object = inst
                         pick_object_dist = dist
-                        rospy.logdebug("Storing object: " + inst.object_id)
 
-                else:
-                    rospy.logdebug("Object to far in x.")
-
-        if not pick_object:
+        if pick_object is None or pick_object_dist > 0.1:
             self.try_robot_arms_get_ready([arm_id])
             self.fsm.error(severity=ArtBrainErrorSeverities.WARNING,
                            error=ArtBrainErrors.ERROR_OBJECT_MISSING)
@@ -1044,9 +943,7 @@ class ArtBrain(object):
     def drill_points(self, instruction, set_drilled_flag=True):
 
         # TODO drill_enabled() je metoda ArtRobotArmHelper - jenze tady jeste nevim ktere rameno se bude pouzivat
-        # TODO ERROR_NOT_IMPLEMENTED -> myslim ze by bylo lepsi zkontrolovat program pri pozadavku na spusteni -
-        # jestli neobsahuje robotem nepodporovane instrukce a pak uz se tim nezabyvat - ke spusteni programu s
-        # instrukci co robot nepodporuje by vubec nemelo dojit
+        # TODO ERROR_NOT_IMPLEMENTED -> myslim ze by bylo lepsi zkontrolovat program pri pozadavku na spusteni - jestli neobsahuje robotem nepodporovane instrukce a pak uz se tim nezabyvat - ke spusteni programu s instrukci co robot nepodporuje by vubec nemelo dojit
         # if not self.rh.drill_enabled():
         #    self.fsm.error(severity=ArtBrainErrorSeverities.ERROR,
         #                   error=ArtBrainErrors.ERROR_NOT_IMPLEMENTED)
@@ -1241,11 +1138,13 @@ class ArtBrain(object):
 
     def try_robot_arms_get_ready(self, arm_ids=[], max_attempts=3):
         assert isinstance(arm_ids, list)
+        rospy.logwarn("try_robot_arms_get_ready")
         if self.robot.halted:
             return False
-
+        rospy.logwarn("after halted")
         attempt = 0
         while True:
+            rospy.logwarn("inside cycle")
             if attempt >= max_attempts:
                 rospy.logerr("Failed to get ready")
                 return False
@@ -1255,8 +1154,9 @@ class ArtBrain(object):
                 rospy.logwarn("Error while getting ready: " + str(arm_id) + " , attempt: " + str(attempt))
                 continue
             else:
-                rospy.loginfo("Robot ready")
+                rospy.logdebug("Robot ready")
                 return True
+
 
     # ***************************************************************************************
     #                                        OTHERS
@@ -1317,10 +1217,10 @@ class ArtBrain(object):
                 return self.right_gripper
 
         if self.tf_listener.frameExists(
-                "base_link") and self.tf_listener.frameExists(self.objects.header.frame_id):
+                "/base_link") and self.tf_listener.frameExists(self.objects.header.frame_id):
             if pick_pose is not None:
                 transformed_pose = self.tf_listener.transformPose(
-                    'base_link', pick_pose)
+                    '/base_link', pick_pose)
                 if transformed_pose.pose.position.y < 0:
                     return self.right_gripper
                 else:
@@ -1334,12 +1234,12 @@ class ArtBrain(object):
                         # exact time does not matter in this case
                         obj_pose.header.stamp = rospy.Time(0)
                         self.tf_listener.waitForTransform(
-                            'base_link',
+                            '/base_link',
                             obj_pose.header.frame_id,
                             obj_pose.header.stamp,
                             rospy.Duration(1))
                         obj_pose = self.tf_listener.transformPose(
-                            'base_link', obj_pose)
+                            '/base_link', obj_pose)
                         if obj_pose.pose.position.y < 0:
                             return self.right_gripper
                         else:
@@ -1604,7 +1504,7 @@ class ArtBrain(object):
             resp.success = False
         rospy.logdebug('Stopping learning')
         self.learning = False
-        rospy.set_param("/art/brain/learning_program", False)
+
         resp.success = True
         self.fsm.learning_done()
         return resp
@@ -1637,13 +1537,6 @@ class ArtBrain(object):
 
             # if self.is_learning_pick_from_feeder():
         '''
-        if msg.interface_id != InterfaceState.BRAIN_ID:
-            if msg.system_state == InterfaceState.STATE_LEARNING:
-                self.ph.set_item_msg(msg.block_id, msg.program_current_item)
-                rospy.set_param("/art/brain/program_id", self.ph.get_program_id())
-                rospy.set_param("/art/brain/block_id", self.block_id)
-                rospy.set_param("/art/brain/item_id", msg.program_current_item.id)
-                self.art.store_program(self.ph.get_program())
         pass
 
     def projectors_calibrated_cb(self, msg):
