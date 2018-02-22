@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="projectors" default="localhost"/>
+    <arg name="scene_server" default="localhost" />
+    <arg name="scene_size" default="1.0,0.6"/>
+    <arg name="scene_origin" default="0,0"/>
+    <arg name="rpm" default="2000"/>
+
+    <group ns="/art/interface/projected_gui">
+
+        <param name="scene_origin" value="$(arg scene_origin)"/>
+        <param name="scene_size" value="$(arg scene_size)"/>
+        <param name="rpm" value="$(arg rpm)"/>
+        <param name="scene_server" value="$(arg scene_server)"/>
+        <param name="scene_server_port" value="1234"/>
+    </group>
+
+    <include ns="/art/localhost" file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">
+      <arg name="base_name_tf" value="localhost_kinect2"/>
+      <arg name="respawn" value="true"/>
+      <arg name="publish_tf" value="true"/>
+      <arg name="output" value="log"/>
+    </include>
+    
+    <include file="$(find art_projected_gui)/launch/projector.launch">
+      <arg name="screen_number" value="1"/>
+      <arg name="machine" value="localhost"/>
+    </include>
+    
+
+    <!--include file="$(find art_projected_gui)/launch/app.launch">
+	  
+      <arg name="projectors" value="localhost"/>
+	  <arg name="scene_server" value="127.0.0.1"/>
+      <arg name="scene_size" value="0.996, 0.574"/>
+      <arg name="scene_origin" value="0.0, 0.0"/>
+      <arg name="rpm" value="2000"/>
+	</include-->
+	
+	<include file="$(find art_touch_driver)/launch/touch.launch">
+	  <arg name="calib_x_min" value="0.1"/>
+	  <arg name="calib_x_max" value="0.9"/>
+ 	  <arg name="calib_y_min" value="0.05"/>
+	  <arg name="calib_y_max" value="0.35"/>
+	</include>
+	
+	<include file="$(find art_calibration)/launch/calibration_marker_detector.launch">
+      <arg name="namespace" value="localhost"/>
+    </include>
+    
+    <include file="$(find art_calibration)/launch/art_calibration.launch">
+      <!--arg name="cells" value="left,right"/-->
+      <arg name="cells" value="localhost"/>
+      <arg name="x_offset" value="0.215"/>
+      <arg name="y_offset" value="0.125"/>
+      <arg name="z_offset" value="0.0"/>
+    </include>
+    
+ 
+    
+    
+    
+    <include file="$(find art_sound)/launch/node.launch">
+        <arg name="machine" value="localhost"/>
+    </include>
+
+    
+    
+
+</launch>
