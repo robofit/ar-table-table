@@ -59,7 +59,7 @@ class ExampleGui(QtCore.QObject):
             self.send_to_clients_evt)
         self.scene_timer.start(1.0 / 15 * 1000)
 
-        self.projectors = [ProjectorHelper("n2")]
+        self.projectors = [ProjectorHelper("localhost")]
 
         rospy.loginfo("Waiting for projector nodes...")
         for proj in self.projectors:
@@ -71,7 +71,7 @@ class ExampleGui(QtCore.QObject):
                 rospy.loginfo("Projector " + proj.proj_id + " already calibrated.")
 
         self.text = QtGui.QGraphicsTextItem("Hello world!", None, self.scene)
-        self.text.setFont(QtGui.QFont('Arial', 48))
+        self.text.setFont(QtGui.QFont('Arial', 148))
         self.text.setDefaultTextColor(QtCore.Qt.white)
 
         rospy.loginfo("Ready")
@@ -146,7 +146,7 @@ def main(args):
 
     app = QtGui.QApplication(sys.argv)
 
-    gui = ExampleGui(0, 0, 1.35, 0.64, 2000, 1234)
+    gui = ExampleGui(0, 0, 1.00, 0.60, 2000, 1234)
     gui.debug_view()
 
     timer = QtCore.QTimer()
