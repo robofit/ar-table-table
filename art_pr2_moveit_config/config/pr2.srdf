@@ -74,7 +74,7 @@
         <joint name="l_shoulder_lift_joint" value="0.2678" />
         <joint name="l_shoulder_pan_joint" value="1.5056" />
         <joint name="l_upper_arm_roll_joint" value="0.2042" />
-        <joint name="l_wrist_flex_joint" value="-1.1648" />
+        <joint name="l_wrist_flex_joint" value="0" />
         <joint name="l_wrist_roll_joint" value="0" />
     </group_state>
     <group_state name="up_right_arm" group="right_arm">
@@ -83,7 +83,7 @@
         <joint name="r_shoulder_lift_joint" value="0.2678" />
         <joint name="r_shoulder_pan_joint" value="-1.5056" />
         <joint name="r_upper_arm_roll_joint" value="-0.2042" />
-        <joint name="r_wrist_flex_joint" value="-1.1648" />
+        <joint name="r_wrist_flex_joint" value="0" />
         <joint name="r_wrist_roll_joint" value="0" />
     </group_state>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
