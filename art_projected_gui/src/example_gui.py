@@ -128,8 +128,9 @@ class ExampleGui(QtCore.QObject):
         self.touch_calibrating = True
         try:
             p = self.touch_calibration_points.pop(0)
-            self.point_item = QtGui.QGraphicsEllipseItem(p[0]*self.scene.rpm, p[1]*self.scene.rpm, 0.01*self.scene.rpm, 0.01*self.scene.rpm, None, self.scene)
+            self.point_item = QtGui.QGraphicsEllipseItem(0, 0, 0.01*self.scene.rpm, 0.01*self.scene.rpm, None, self.scene)
             self.point_item.setBrush(QtGui.QBrush(QtCore.Qt.white, style = QtCore.Qt.SolidPattern))
+            self.point_item.setPos(p[0]*self.scene.rpm, p[1]*self.scene.rpm)
         except IndexError:
             for it in self.scene.items():
 
@@ -142,12 +143,14 @@ class ExampleGui(QtCore.QObject):
     def touch_detected_cb(self, data):
         try:
             p = self.touch_calibration_points.pop(0)
-            self.scene.removeItem(self.point_item)
-            del self.point_item
-            self.point_item = QtGui.QGraphicsEllipseItem(p[0]*self.scene.rpm, p[1]*self.scene.rpm, 0.01*self.scene.rpm, 0.01*self.scene.rpm, None, self.scene)
-            self.point_item.setBrush(QtGui.QBrush(QtCore.Qt.white, style = QtCore.Qt.SolidPattern))
+            #self.scene.removeItem(self.point_item)
+            #del self.point_item
+            #self.point_item = QtGui.QGraphicsEllipseItem(p[0]*self.scene.rpm, p[1]*self.scene.rpm, 0.01*self.scene.rpm, 0.01*self.scene.rpm, None, self.scene)
+            self.point_item.setPos(p[0]*self.scene.rpm, p[1]*self.scene.rpm)
+            #self.point_item.setBrush(QtGui.QBrush(QtCore.Qt.white, style = QtCore.Qt.SolidPattern))
         except IndexError:
             self.scene.removeItem(self.point_item)
+            del self.point_item
             for it in self.scene.items():
                 
                 # TODO fix this - in makes visible even items that are invisible by purpose
