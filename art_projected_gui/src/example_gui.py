@@ -5,6 +5,9 @@ import signal
 import rospy
 from PyQt4 import QtGui, QtCore, QtNetwork
 from art_projected_gui.helpers import ProjectorHelper
+from art_msgs.srv import TouchCalibrationPoints, TouchCalibrationPointsResponse
+from std_msgs.msg import Empty, Bool
+from std_srvs.srv import Empty as EmptySrv, EmptyRequest
 
 
 class customGraphicsView(QtGui.QGraphicsView):
@@ -44,6 +47,20 @@ class ExampleGui(QtCore.QObject):
         self.view.setViewportUpdateMode(QtGui.QGraphicsView.FullViewportUpdate)
         self.view.setStyleSheet("QGraphicsView { border-style: none; }")
 
+        self.touch_calib_srv = rospy.Service(
+            '/art/interface/projected_gui/touch_calibration', TouchCalibrationPoints, self.touch_calibration_points_cb)
+        self.touched_sub = None
+        self.projectors_calibrated_pub = rospy.Publisher('/art/interface/projected_gui/app/projectors_calibrated', Bool, queue_size=10, latch=True)
+        
+        
+        self.calibrating_touch = False
+        self.touch_calibration_points = None
+        QtCore.QObject.connect(self, QtCore.SIGNAL(
+            'touch_calibration_points_evt'), self.touch_calibration_evt)
+        self.point_item = None
+        
+        touch_calibrated = rospy.wait_for_message("/art/interface/touchtable/calibrated", Bool).data
+        
         self.tcpServer = QtNetwork.QTcpServer(self)
         if not self.tcpServer.listen(port=self.port):
             rospy.logerr(
@@ -66,17 +83,83 @@ class ExampleGui(QtCore.QObject):
             proj.wait_until_available()
             if not proj.is_calibrated():
                 rospy.loginfo("Starting calibration of projector: " + proj.proj_id)
-                proj.calibrate(self.calibrated_cb)
+                b = Bool()
+                b.data = False
+                self.projectors_calibrated_pub.publish(b)
+                proj.calibrate(self.calibrated_cb)                    
             else:
                 rospy.loginfo("Projector " + proj.proj_id + " already calibrated.")
-
+                
+        
         self.text = QtGui.QGraphicsTextItem("Hello world!", None, self.scene)
         self.text.setFont(QtGui.QFont('Arial', 148))
         self.text.setDefaultTextColor(QtCore.Qt.white)
-
+        if not touch_calibrated:
+            rospy.wait_for_service('/art/interface/touchtable/calibrate')
+            rospy.loginfo(
+                'Get /art/interface/touchtable/calibrate service')
+            self.calibrate_table_srv_client = rospy.ServiceProxy('/art/interface/touchtable/calibrate', EmptySrv)
+            req = EmptyRequest()            
+            self.calibrate_table_srv_client.call(req)
+            
+        
+        
         rospy.loginfo("Ready")
 
+    def touch_calibration_points_cb(self, req):
+        for it in self.scene.items():
+
+            it.setVisible(False) 
+        
+        self.touched_sub = rospy.Subscriber(
+            '/art/interface/touchtable/touch_detected', Empty, self.touch_detected_cb, queue_size=10)
+        
+        self.touch_calibration_points = []
+        for pt in req.points:
+
+            self.touch_calibration_points.append((pt.point.x, pt.point.y))
+        self.emit(QtCore.SIGNAL('touch_calibration_points_evt'))
+        resp = TouchCalibrationPointsResponse()
+        resp.success = True
+        return resp
+
+
+    def touch_calibration_evt(self):
+        self.touch_calibrating = True
+        try:
+            p = self.touch_calibration_points.pop(0)
+            self.point_item = QtGui.QGraphicsEllipseItem(p[0]*self.scene.rpm, p[1]*self.scene.rpm, 0.01*self.scene.rpm, 0.01*self.scene.rpm, None, self.scene)
+            self.point_item.setBrush(QtGui.QBrush(QtCore.Qt.white, style = QtCore.Qt.SolidPattern))
+        except IndexError:
+            for it in self.scene.items():
+
+                # TODO fix this - in makes visible even items that are invisible by purpose
+                it.setVisible(True)
+                self.touched_sub.unregister()
+                
+
+
+    def touch_detected_cb(self, data):
+        try:
+            p = self.touch_calibration_points.pop(0)
+            self.scene.removeItem(self.point_item)
+            del self.point_item
+            self.point_item = QtGui.QGraphicsEllipseItem(p[0]*self.scene.rpm, p[1]*self.scene.rpm, 0.01*self.scene.rpm, 0.01*self.scene.rpm, None, self.scene)
+            self.point_item.setBrush(QtGui.QBrush(QtCore.Qt.white, style = QtCore.Qt.SolidPattern))
+        except IndexError:
+            self.scene.removeItem(self.point_item)
+            for it in self.scene.items():
+                
+                # TODO fix this - in makes visible even items that are invisible by purpose
+                it.setVisible(True)
+                self.touched_sub.unregister()
+
+
     def calibrated_cb(self, proj):
+        b = Bool()
+        b.data = True
+        self.projectors_calibrated_pub.publish(b)
+        
 
         rospy.loginfo("Projector " + proj.proj_id + " calibrated: " + str(proj.is_calibrated()))
 
