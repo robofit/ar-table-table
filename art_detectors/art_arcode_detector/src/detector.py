@@ -51,11 +51,11 @@ class ArCodeDetector:
 
                 if aid in [50, 51, 52, 53, 54, 55, 56, 57, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010,
                            1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1024, 1025]:
-                    object_type = self.art.get_object_type("Spojka")
+                    object_type = self.art.get_object_type("Stretcher")
                 elif aid in [60, 61, 62, 63, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008]:
-                    object_type = self.art.get_object_type("Kratka_noha")
+                    object_type = self.art.get_object_type("ShortLeg")
                 elif aid in [60, 61, 62, 63, 3001, 3002, 3003, 3004]:
-                    object_type = self.art.get_object_type("Dlouha_noha")
+                    object_type = self.art.get_object_type("LongLeg")
 
                 if object_type is None:
 
