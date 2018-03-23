@@ -118,6 +118,7 @@ class ExampleGui(QtCore.QObject):
         for pt in req.points:
 
             self.touch_calibration_points.append((pt.point.x, pt.point.y))
+	print req.points
         self.emit(QtCore.SIGNAL('touch_calibration_points_evt'))
         resp = TouchCalibrationPointsResponse()
         resp.success = True
@@ -130,7 +131,7 @@ class ExampleGui(QtCore.QObject):
             p = self.touch_calibration_points.pop(0)
             self.point_item = QtGui.QGraphicsEllipseItem(0, 0, 0.01*self.scene.rpm, 0.01*self.scene.rpm, None, self.scene)
             self.point_item.setBrush(QtGui.QBrush(QtCore.Qt.white, style = QtCore.Qt.SolidPattern))
-            self.point_item.setPos(p[0]*self.scene.rpm, p[1]*self.scene.rpm)
+            self.point_item.setPos(p[0]*self.scene.rpm, (self.height - p[1])*self.scene.rpm)
         except IndexError:
             for it in self.scene.items():
 
@@ -146,7 +147,7 @@ class ExampleGui(QtCore.QObject):
             #self.scene.removeItem(self.point_item)
             #del self.point_item
             #self.point_item = QtGui.QGraphicsEllipseItem(p[0]*self.scene.rpm, p[1]*self.scene.rpm, 0.01*self.scene.rpm, 0.01*self.scene.rpm, None, self.scene)
-            self.point_item.setPos(p[0]*self.scene.rpm, p[1]*self.scene.rpm)
+            self.point_item.setPos(p[0]*self.scene.rpm, (self.height - p[1])*self.scene.rpm)
             #self.point_item.setBrush(QtGui.QBrush(QtCore.Qt.white, style = QtCore.Qt.SolidPattern))
         except IndexError:
             self.scene.removeItem(self.point_item)
