@@ -27,7 +27,7 @@ class BridgeToJsonMsg:
         for obj in detected_object.instances:
             '''to_json = {'name': obj.object_id, 'pose': {'position': {'x': obj.pose.position.x,
                                                                          'y': obj.pose.position.y,
-                                                                         'z': 0},
+                                                                         'z': obj.pose.position.z},
                                                             'orientation': {'x': obj.pose.orientation.x,
                                                                             'y': obj.pose.orientation.y,
                                                                             'z': obj.pose.orientation.z,
@@ -40,16 +40,16 @@ class BridgeToJsonMsg:
                 continue
             to_json = {'name': obj.object_id,
                        'type': obj.object_type,
-                       'position': {'x': obj.pose.position.x * 1000,  # meters to millimeters
-                                    'y': obj.pose.position.y * 1000,
-                                    'z': 0},
+                       'position': {'x': obj.pose.position.x,  #in meters 
+                                    'y': obj.pose.position.y,
+                                    'z': obj.pose.position.z},
                        'orientation': {'x': obj.pose.orientation.x,
                                        'y': obj.pose.orientation.y,
                                        'z': obj.pose.orientation.z,
                                        'w': obj.pose.orientation.w},
-                       'bbox': {'x': resp.object_type.bbox.dimensions[0] * 1000,
-                                'y': resp.object_type.bbox.dimensions[1] * 1000,
-                                'z': resp.object_type.bbox.dimensions[2] * 1000}}
+                       'bbox': {'x': resp.object_type.bbox.dimensions[0],
+                                'y': resp.object_type.bbox.dimensions[1],
+                                'z': resp.object_type.bbox.dimensions[2]}}
             objects.append(to_json)
         self.pub.publish(jsonpickle.encode(objects))
 
